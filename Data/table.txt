@@ -1,0 +1,1 @@
+Save your CSV table here with 3 columns, you can chose your delimiter after.
