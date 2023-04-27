@@ -29,48 +29,115 @@ X_m[2,:] = [float(x) for x in Z[:]]
 # Chargement du modèle
 print("---------------------------------------")
 for file in os.listdir("modele/"):
-    if file.endswith(".h5"):
+    if file.startswith("idee"):
         print(file)
 print("\n")
 
-nom=input("Donner le nom du modele: ")
-number = int(''.join(filter(str.isdigit, nom)))
-if(np.size(X_m[0,:]) < number):
-    print("Impossible de faire tourner le modèle, demande un minimum de "+str(number)+" points.")
-    exit()
-elif(np.size(X_m[0,:]) > number):
-    indices = np.arange(np.size(X_m[0,:]))
-    np.random.shuffle(indices)
-    X_m = X_m[:, indices]  
-    X_m = X_m[:, :number]  
-    X_m = np.reshape(X_m, (1,3, number))
+case = input("Voulez utiliser plusieurs modèles ? (o/n): ")
 
-model = keras.models.load_model("modele/"+nom+'.h5')
-y_verif = model.predict(X_m)
-y_verif = y_verif.flatten()
+if(case == "n"):
+    nom=input("Donner le nom du modele: ")
+    number = int(''.join(filter(str.isdigit, nom)))
+    if(np.size(X_m[0,:]) < number):
+        print("Impossible de faire tourner le modèle, demande un minimum de "+str(number)+" points.")
+        exit()
+    elif(np.size(X_m[0,:]) > number):
+        indices = np.arange(np.size(X_m[0,:]))
+        np.random.shuffle(indices)
+        X_m = X_m[:, indices]  
+        X_m = X_m[:, :number]  
+        X_m = np.reshape(X_m, (1,3, number))
 
-print("============================================================")
-header = ["paramètre", "Expérimentale"]
-print("{:<10} {:<10}".format(header[0], header[1]))
-nom = ["r1", "r2", "alpha", "beta", "gamma", "x0", "y0", "z0"]
-for i in range(8):
-    print("{:<10} {:<10.3f}".format(nom[i], y_verif[i]))
-print("============================================================")
+    model = keras.models.load_model("modele/"+nom+'.h5')
+    y_verif = model.predict(X_m)
+    y_verif = y_verif.flatten()
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+    print("============================================================")
+    header = ["paramètre", "Expérimentale"]
+    print("{:<10} {:<10}".format(header[0], header[1]))
+    nom = ["r1", "r2", "alpha", "beta", "gamma", "x0", "y0", "z0"]
+    for i in range(8):
+        print("{:<10} {:<10.3f}".format(nom[i], y_verif[i]))
+    print("============================================================")
 
-X_t = tore_view(r1=y_verif[0], r2=y_verif[1], alpha=y_verif[2], beta=y_verif[3], gamma=y_verif[4], x0=y_verif[5], y0=y_verif[6], z0=y_verif[7], nbp=75)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-ax.scatter(X_m[0, 0, :], X_m[0, 1, :], X_m[0, 2, :], marker='o', color="blue", alpha=0.7, label="Initial")
-ax.scatter(X_t[0, :], X_t[1, :], X_t[2, :], marker='o', color="red", alpha=0.2, label="IA + filtre")
-ax.set_xlabel('X (m)')
-ax.set_ylabel('Y (m)')
-ax.set_zlabel('Z (m)')
-ax.set_xlim([-6, 6])
-ax.set_ylim([-6, 6])
-ax.set_zlim([-6, 6])
-ax.set_title('Torus')
-ax.legend()
+    X_t = tore_view(r1=y_verif[0], r2=y_verif[1], alpha=y_verif[2], beta=y_verif[3], gamma=y_verif[4], x0=y_verif[5], y0=y_verif[6], z0=y_verif[7], nbp=75)
+
+    ax.scatter(X_m[0, 0, :], X_m[0, 1, :], X_m[0, 2, :], marker='o', color="blue", alpha=0.7, label="Initial")
+    ax.scatter(X_t[0, :], X_t[1, :], X_t[2, :], marker='o', color="red", alpha=0.2, label="IA + filtre")
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_zlabel('Z (m)')
+    ax.set_xlim([-6, 6])
+    ax.set_ylim([-6, 6])
+    ax.set_zlim([-6, 6])
+    ax.set_title('Torus general')
+    ax.legend()
+
+
+else:
+    model = []
+    champ = ["rayon", "offset", "angles"]
+    number = []
+    print("Renseigner les 3 modèles")
+    for i in range(3):
+        print("-----------------------------------")
+        print(str(champ[i])+": ")
+        for file in os.listdir("modele/"):
+            if file.startswith(champ[i]):
+                print(file)
+        nom=input("Donner le nom du modele: ")
+        model.append(keras.models.load_model("modele/"+nom+'.h5'))
+        number.append(int(''.join(filter(str.isdigit, nom))))
+        if(np.size(X_m[0,:]) < number[-1]):
+            print("Impossible de faire tourner le modèle, demande un minimum de "+str(number)+" points.")
+            exit()
+    cond = 0
+    for i in range(3):
+        if(np.size(X_m[0,:]) > number[i]):
+            cond = 1
+    if(cond == 1):
+        indices = np.arange(np.size(X_m[0,:]))
+        np.random.shuffle(indices)
+        X_m = X_m[:, indices]  
+        X_m = X_m[:, :number[-1]]  
+        X_m = np.reshape(X_m, (1,3, number[-1]))
+
+    
+    nbp = input("Donner le nombre de points pour la figure: ")
+
+    # Verif avec plusieurs modèles
+    y_r = model[0].predict(X_m)
+    y_a = model[2].predict(X_m)
+    y_off = model[1].predict(X_m)
+
+    y_verif = [item for sublist in [y_r, y_a, y_off] for item in np.ravel(sublist)]
+
+    print("============================================================")
+    header = ["paramètre", "Expérimentale"]
+    print("{:<10} {:<10}".format(header[0], header[1]))
+    nom = ["r1", "r2", "alpha", "beta", "gamma", "x0", "y0", "z0"]
+    for i in range(8):
+        print("{:<10} {:<10.3f}".format(nom[i], y_verif[i]))
+    print("============================================================")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    X_t = tore_view(r1=y_verif[0], r2=y_verif[1], alpha=y_verif[2], beta=y_verif[3], gamma=y_verif[4], x0=y_verif[5], y0=y_verif[6], z0=y_verif[7], nbp=nbp)
+
+    ax.scatter(X_m[0, 0, :], X_m[0, 1, :], X_m[0, 2, :], marker='o', color="blue", alpha=0.7, label="Initial")
+    ax.scatter(X_t[0, :], X_t[1, :], X_t[2, :], marker='o', color="red", alpha=0.2, label="IA + filtre")
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_zlabel('Z (m)')
+    ax.set_xlim([-6, 6])
+    ax.set_ylim([-6, 6])
+    ax.set_zlim([-6, 6])
+    ax.set_title('Torus general')
+    ax.legend()
+
 plt.show()
 

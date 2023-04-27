@@ -1,7 +1,7 @@
 from tore_gen import tore
 import numpy as np
 
-def generate_dataset(nb: int = -1, i: int = 0, save: bool = False, path: str = "dataset/torus_datasetN", Ech: int = 50, parameters: np.ndarray = np.array([-10, 10, -10, 10, -10, 10, 5, 20, 0.1, 5, 0, 2*np.pi, 0, 2*np.pi, 0, 2*np.pi, False]), show:bool = True):
+def generate_dataset(nb: int = -1, i: int = 0, save: bool = False, path: str = "dataset/torus_datasetN", Ech: int = 50, parameters: np.ndarray = np.array([-10, 10, -10, 10, -10, 10, 5, 20, 0.1, 5, 0, 2*np.pi, 0, 2*np.pi, 0, 2*np.pi, "uniform", 0.1, -0.1, 0.5, False]), show:bool = True, info:bool = False):
     #========================== Soit le default array ================
     # x0low, x0high, y0low, y0high, z0low, z0high
     # r1low, r1high, r2low, r2high
@@ -10,33 +10,33 @@ def generate_dataset(nb: int = -1, i: int = 0, save: bool = False, path: str = "
     # ampl
     # ================================================================
 
-    x0low = parameters[0]
-    x0high = parameters[1]
+    x0low = float(parameters[0])
+    x0high = float(parameters[1])
 
-    y0low = parameters[2]
-    y0high = parameters[3]
+    y0low = float(parameters[2])
+    y0high = float(parameters[3])
 
-    z0low = parameters[4]
-    z0high = parameters[5]
+    z0low = float(parameters[4])
+    z0high = float(parameters[5])
 
-    r1low = parameters[6]
-    r1high = parameters[7]
+    r1low = float(parameters[6])
+    r1high =float(parameters[7])
 
-    r2low = parameters[8]
-    r2high = parameters[9]
+    r2low = float(parameters[8])
+    r2high = float(parameters[9])
 
-    allow = parameters[10] 
-    alhigh = parameters[11]
-    below = parameters[12] 
-    behigh = parameters[13]
-    galow = parameters[14] 
-    gahigh = parameters[15]
+    allow = float(parameters[10])
+    alhigh = float(parameters[11])
+    below = float(parameters[12])
+    behigh = float(parameters[13])
+    galow = float(parameters[14])
+    gahigh = float(parameters[15])
 
-    mode = parameters[16] 
-    first_p = parameters[17] 
-    second_p = parameters[18]
-    ampl = parameters[19]
-    save_fig = parameters[20]
+    mode = str(parameters[16])
+    first_p = float(parameters[17])
+    second_p = float(parameters[18])
+    ampl = float(parameters[19])
+    save_fig = bool(parameters[20])
 
     # ------------------------------------------------ 
 
@@ -67,9 +67,10 @@ def generate_dataset(nb: int = -1, i: int = 0, save: bool = False, path: str = "
 
         param = {"r1":r1, "r2":r2, "alpha":alpha, "beta":beta, "gamma":gamma, "x0":x0, "y0":y0, "z0":z0}
 
-        print("Pour la génération :"+str(i))
-        for key, value in param.items():
-            print("{:<10} : {:<10}".format(key, value))
+        if(info == False):
+            print("Pour la génération :"+str(i))
+            for key, value in param.items():
+                print("{:<10} : {:<10}".format(key, value))
 
     else:
         pass
